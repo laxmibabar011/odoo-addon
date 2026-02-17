@@ -1,224 +1,96 @@
-📊 Real-Time Sales Margin Dashboard (Odoo)
+# 📊 Real-Time Sales Margin Dashboard (Odoo)
+
+## 📌 Project Overview
+**Real-Time Sales Margin Dashboard** is a custom Odoo module that enhances the standard Sales module by introducing real-time profitability analysis. 
+
+It transforms a standard Sale Order into a financial decision-making dashboard, helping businesses monitor profitability before confirming quotations by calculating and displaying:
+- **Cost of Goods Sold (COGS)**
+- **Landed Cost**
+- **Configurable Overhead**
+- **Net Margin** (per line and per order)
+
+---
+
+## 🚀 Key Features
+
+### 🔹 1. Line-Level Margin Calculation
+Each sale order line automatically computes:
+- **COGS**: Fetched directly from product cost.
+- **Landed Cost**: Manual per-line entry for specific shipping/handling costs.
+- **Overhead Cost**: Rule-based or global fallback.
+- **Margin Value**: Net profit per line.
+
+> **Formula Used:**
+> `Total Cost = (COGS + Landed Cost + Overhead) × Quantity`
+> `Margin = Revenue – Total Cost`
+
+### 🔹 2. Order-Level Profit Dashboard
+A dedicated banner inside the Sale Order form displays:
+- ✅ Total Revenue
+- ✅ Total COGS
+- ✅ Total Overhead
+- ✅ **Net Margin** (Highlighted KPI)
+
+Includes quick actions:
+- **Recompute Margins** button
+- **Detailed Breakdown** button for deep-dive analysis.
+
+### 🔹 3. Configurable Overhead Rules
+Manage overheads with precision using the new `sale.overhead.rule` model:
+- **Category-based rules**: Apply different costs to different product groups.
+- **Flexible Types**: Choose between *Percentage of COGS* or *Fixed amount per unit*.
+- **Control**: Active/Inactive toggles and Sales Manager-only access.
+- **Global Fallback**: Automatically uses a global percentage if no specific rule is found.
+
+### 🔹 4. Margin Breakdown Wizard
+An interactive popup wizard for transparency:
+- Aggregate totals overview.
+- Line-by-line margin details.
+- Expandable cost breakdown (COGS, Landed, Overhead).
+- Visual profit/loss highlighting for quick identification.
+
+### 🔹 5. Role-Based Security
+| Role | Access Level |
+| :--- | :--- |
+| **Sales Manager** | Full control over overhead configuration |
+| **Sales User** | Read-only access to overhead rules |
+| **Internal User** | Access to margin breakdown wizard |
+
+---
+
+## ⚙️ Installation
+1. Copy the module folder into your Odoo **addons** directory.
+2. Restart your Odoo server.
+3. Enable **Developer Mode**.
+4. Navigate to **Apps** -> **Update Apps List**.
+5. Search for "Real-Time Sales Margin Dashboard" and click **Install**.
+
+---
+
+## 🔧 Configuration & Usage
+
+### Step 1: Configure Overhead Rules
+Go to **Real-Time Margin Dashboard** → **Overhead Configuration** and create rules:
+- Select a **Product Category**.
+- Choose **Overhead Type** (Percentage or Fixed).
+- Enter the value and **Activate** the rule.
+
+### Step 2: Create Sale Order
+1. Create a new quotation and add products.
+2. Enter **Landed Cost** per line if applicable.
+3. Review calculations in the dashboard banner.
+4. Click **Analysis Breakdown** for a detailed cost view.
+
+### 🔄 Manual Recalculation
+If product costs or overhead rules change after the order is created, click the **Recompute Margins** button in the Sale Order header.
+
+---
+
+## 🏗 Technical Highlights
+- **Inheritance**: Extends `sale.order` and `sale.order.line` without breaking core logic.
+- **Reactive**: Uses `@api.depends` for instant UI updates.
+- **Persistence**: Implements `TransientModel` for the analysis wizard.
+- **Settings**: Uses `ir.config_parameter` for global fallback configuration.
+- **UI/UX**: Upgrade-safe XML view inheritance via XPath and professional Bootstrap styling.
+- **Security**: Strict access control via `ir.model.access.csv`.
 
-A powerful Odoo module that enhances the Sales module with real-time profitability analysis, configurable overhead allocation, and detailed margin breakdown visualization.
-
-This module transforms the standard Sale Order into a financial decision-making dashboard.
-
-🚀 Business Problem
-
-Standard Odoo Sales provides revenue tracking but does not offer:
-
-Real-time COGS visibility
-
-Configurable overhead allocation
-
-Landed cost inclusion per line
-
-Line-level profitability insights
-
-Financial breakdown visualization
-
-This module solves that by introducing:
-
-✔ Real-time margin computation
-✔ Category-based overhead rules
-✔ Configurable overhead logic
-✔ Interactive profitability dashboard
-✔ Detailed cost breakdown wizard
-
-🏗️ Architecture Overview
-
-The module extends:
-
-sale.order
-
-sale.order.line
-
-It introduces:
-
-Configurable overhead rule model
-
-Transient wizard models for financial breakdown
-
-Custom dashboard UI components
-
-Role-based access control
-
-The design follows:
-
-Clean inheritance (no core modification)
-
-Modular compute methods
-
-Configuration-driven logic
-
-Upgrade-safe view inheritance
-
-✨ Key Features
-📌 1. Line-Level Margin Calculation
-
-Each sale order line calculates:
-
-COGS (from product standard price)
-
-Landed Cost (manual per line)
-
-Overhead Cost (configurable)
-
-Final Margin
-
-Formula:
-
-Total Cost = (COGS + Landed + Overhead) × Quantity
-Margin = Revenue – Total Cost
-
-📌 2. Order-Level Profitability Dashboard
-
-Inside Sale Order form:
-
-Total Revenue
-
-Total COGS
-
-Total Overhead
-
-Net Margin (highlighted)
-
-Manual Recompute Button
-
-Breakdown Analysis Button
-
-This acts as a live financial KPI banner.
-
-📌 3. Configurable Overhead Rules
-
-New model: sale.overhead.rule
-
-Supports:
-
-Category-based rules
-
-Percentage of COGS
-
-Fixed amount per unit
-
-Active toggle
-
-Manager-controlled access
-
-Fallback to global system parameter if no category rule exists.
-
-📌 4. Margin Breakdown Wizard
-
-Popup provides:
-
-Aggregate totals
-
-Line-by-line profitability
-
-Cost component breakdown
-
-Visual profit/loss highlighting
-
-Nested expandable cost structure
-
-Designed for finance transparency.
-
-📌 5. Role-Based Security
-Role	Overhead Rules	Wizard Access
-Sales Manager	Full Access	Full
-Sales User	Read Only	Full
-Internal User	N/A	Full
-
-Ensures financial configuration integrity.
-
-🖥️ UI Enhancements
-
-Financial KPI banner in Sale Order
-
-Conditional margin coloring
-
-Monetary widgets
-
-Clean Bootstrap styling
-
-Optional column visibility
-
-Structured menu segregation
-
-📂 Module Structure
-real_time_margin_dashboard/
-│
-├── models/
-│   ├── sale_order.py
-│   ├── overhead_rule.py
-│   ├── margin_wizard.py
-│
-├── views/
-│   ├── sale_order_views.xml
-│   ├── overhead_rule_views.xml
-│   ├── wizard_views.xml
-│
-├── security/
-│   ├── ir.model.access.csv
-│
-├── __manifest__.py
-└── README.md
-
-⚙️ Installation
-
-Place module inside your Odoo addons directory.
-
-Update app list.
-
-Install module from Apps menu.
-
-Configure overhead rules from:
-
-Real-Time Margin Dashboard → Overhead Configuration
-
-🔄 How It Works
-
-User creates quotation.
-
-Product COGS is fetched from standard_price.
-
-User enters optional landed cost.
-
-Overhead is calculated:
-
-Category rule → If exists
-
-Otherwise → Global percentage fallback
-
-Margin computed dynamically.
-
-Dashboard updates instantly.
-
-Manual recompute available if product costs change.
-
-🧠 Technical Highlights
-
-Uses @api.depends for reactive computation
-
-Uses TransientModel for wizard isolation
-
-Uses ir.config_parameter for fallback configuration
-
-Uses view inheritance via XPath (upgrade-safe)
-
-Uses conditional invisibility and decoration attributes
-
-Follows Odoo security best practices
-
-📊 Business Impact
-
-Real-time profitability insight
-
-Faster pricing decisions
-
-Prevents loss-making quotations
-
-Improves sales margin control
-
-Financial transparency for management
