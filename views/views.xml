@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Overhead Rule Views -->
+    <record id="view_sale_overhead_rule_tree" model="ir.ui.view">
+        <field name="name">sale.overhead.rule.tree</field>
+        <field name="model">sale.overhead.rule</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="overhead_type"/>
+                <field name="overhead_percent" invisible="overhead_type == 'fixed'"/>
+                <field name="overhead_fixed_amount" invisible="overhead_type == 'percentage'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sale_overhead_rule_form" model="ir.ui.view">
+        <field name="name">sale.overhead.rule.form</field>
+        <field name="model">sale.overhead.rule</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="category_id"/>
+                        </group>
+                        <group>
+                            <field name="overhead_type"/>
+                            <field name="overhead_percent" invisible="overhead_type == 'fixed'"/>
+                            <field name="overhead_fixed_amount" invisible="overhead_type == 'percentage'"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sale_overhead_rule" model="ir.actions.act_window">
+        <field name="name">Overhead Rules</field>
+        <field name="res_model">sale.overhead.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Wizard View with Aggregate Row -->
+    <record id="view_sale_margin_breakdown_wizard_form" model="ir.ui.view">
+        <field name="name">sale.margin.breakdown.wizard.form</field>
+        <field name="model">sale.margin.breakdown.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Detailed Margin Breakdown">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Margin Analysis</h1>
+                    </div>
+                    
+                    <!-- Aggregate Summary -->
+                    <group>
+                        <group string="Totals Summary" class="bg-light p-3">
+                            <field name="total_quantity"/>
+                            <field name="total_revenue" widget="monetary"/>
+                            <field name="total_cogs" widget="monetary"/>
+                        </group>
+                        <group string="" class="bg-light p-3">
+                            <field name="total_landed" widget="monetary"/>
+                            <field name="total_overhead" widget="monetary"/>
+                            <field name="total_margin" widget="monetary" 
+                                   class="fw-bold text-success"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Line Items">
+                            <field name="line_ids">
+                                <list>
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit" widget="monetary"/>
+                                    <field name="price_subtotal" widget="monetary"/>
+                                    <field name="cogs_price" widget="monetary"/>
+                                    <field name="landed_cost" widget="monetary"/>
+                                    <field name="overhead_cost" widget="monetary"/>
+                                    <field name="margin_value" widget="monetary" 
+                                           decoration-success="margin_value &gt; 0" 
+                                           decoration-danger="margin_value &lt;= 0"/>
+                                </list>
+                            </field>
+                        </page>
+                        
+                        <page string="Cost Breakdown Details">
+                            <field name="line_ids">
+                                <list>
+                                    <field name="product_id"/>
+                                    <field name="cost_detail_ids" widget="one2many_list">
+                                        <list>
+                                            <field name="name"/>
+                                            <field name="cost_type"/>
+                                            <field name="amount" widget="monetary"/>
+                                        </list>
+                                    </field>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Sale Order Form Inheritance - Fixed Visibility -->
+    <record id="view_order_form_margin_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.margin.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Add Recompute Button in Header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_recompute_margins" type="object" 
+                        string="🔄 Recompute Margins" 
+                        class="btn-secondary"
+                        invisible="state == 'cancel'"
+                        help="Click to update margins after changing product costs"/>
+            </xpath>
+            
+            <!-- Dashboard Banner -->
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-info d-flex justify-content-between align-items-center p-3 mb-2 mx-3 mt-2" 
+                     style="border-radius: 8px; border-left: 5px solid #017e84;"
+                     invisible="state == 'cancel'">
+                    <div class="d-flex gap-5">
+                        <div class="d-flex flex-column">
+                            <span class="text-uppercase small fw-bold text-muted">Total Revenue</span>
+                            <span class="h4 mb-0 fw-bold"><field name="amount_total" widget="monetary"/></span>
+                        </div>
+                        <div class="d-flex flex-column border-start ps-4">
+                            <span class="text-uppercase small fw-bold text-muted">Total COGS</span>
+                            <span class="h4 mb-0 fw-bold text-danger"><field name="total_cogs" widget="monetary"/></span>
+                        </div>
+                        <div class="d-flex flex-column border-start ps-4">
+                            <span class="text-uppercase small fw-bold text-muted">Overhead</span>
+                            <span class="h4 mb-0 fw-bold text-warning"><field name="total_overhead" widget="monetary"/></span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="text-uppercase small fw-bold text-muted d-block">Net Margin</span>
+                        <span class="h2 mb-0 fw-bolder text-success"><field name="net_margin" widget="monetary"/></span>
+                        <button name="action_open_margin_breakdown" type="object" string="Analysis Breakdown ➜" 
+                                class="btn btn-link p-0 fw-bold text-decoration-none"
+                                invisible="not order_line"/>
+                    </div>
+                </div>
+            </xpath>
+            
+            <!-- Add Landed Cost to Order Lines -->
+            <xpath expr="//field[@name='order_line']//field[@name='price_unit']" position="after">
+                <field name="landed_cost" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Sale Order Line list View - Add Margin Fields -->
+    <record id="view_order_line_tree_margin_inherit" model="ir.ui.view">
+        <field name="name">sale.order.line.tree.margin.inherit</field>
+        <field name="model">sale.order.line</field>
+        <field name="inherit_id" ref="sale.view_order_line_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='price_subtotal']" position="after">
+                <field name="cogs_price" optional="hide"/>
+                <field name="landed_cost" optional="hide"/>
+                <field name="overhead_cost" optional="hide"/>
+                <field name="margin_value" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_margin_dashboard_root"
+              name="Real-Time Margin Dashboard"
+              web_icon="sale_management,static/description/icon.png"
+              sequence="1"/>
+
+    <menuitem id="menu_margin_dashboard_sales"
+              name="Sales Margins"
+              parent="menu_margin_dashboard_root"
+              action="sale.action_orders"
+              sequence="10"/>
+              
+    <menuitem id="menu_margin_overhead_rules"
+              name="Overhead Configuration"
+              parent="menu_margin_dashboard_root"
+              action="action_sale_overhead_rule"
+              sequence="20"/>
+</odoo>
